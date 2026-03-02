@@ -1,8 +1,10 @@
 package detectors
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/yourusername/clawsanitizer/internal/api"
@@ -327,5 +329,118 @@ func TestSupplyChain_S4_NoSkills(t *testing.T) {
 	findings := d.checkS4EmptyHashes(cfg)
 	if findings != nil {
 		t.Errorf("expected nil findings for empty skills, got %v", findings)
+	}
+}
+
+// TestSupplyChain_S2_KnownBadSkill verifies all fields of a malicious-flagged skill finding
+// (S2 check with a mocked ClawHub returning malicious=true and a descriptive reason string).
+func TestSupplyChain_S2_KnownBadSkill(t *testing.T) {
+	const skillName = "credential-harvester"
+	const reason = "Exfiltrates API keys to remote C2 server"
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.URL.Path, skillName) {
+			t.Errorf("unexpected request path: %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"name":%q,"malicious":true,"reason":%q}`, skillName, reason)
+	}))
+	defer server.Close()
+
+	d := makeTestSupplyChainDetector(server)
+	cfg := &types.OpenClawConfig{
+		Skills: []types.SkillConfig{
+			{Name: skillName, Source: "clawhub://" + skillName + "@0.1.0", Hash: "somehash"},
+		},
+	}
+	findings := d.checkS2ClawHubReputation(cfg)
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding for known-bad skill, got %d", len(findings))
+	}
+	f := findings[0]
+	if f.ID != "SUPPLY_CHAIN-002" {
+		t.Errorf("wrong ID: %s, want SUPPLY_CHAIN-002", f.ID)
+	}
+	if f.Severity != types.SeverityCritical {
+		t.Errorf("wrong severity: %s, want CRITICAL", f.Severity)
+	}
+	if f.Category != types.CategorySupplyChain {
+		t.Errorf("wrong category: %s", f.Category)
+	}
+	if !strings.Contains(f.Title, skillName) {
+		t.Errorf("title should mention skill name %q, got: %s", skillName, f.Title)
+	}
+	if !strings.Contains(f.Description, reason) {
+		t.Errorf("description should contain reason %q, got: %s", reason, f.Description)
+	}
+}
+
+// TestSupplyChain_S4_NoFindings_CleanConfig verifies a config with only clean, official
+// skills (no dangerous keywords, official source) produces zero S4 findings.
+func TestSupplyChain_S4_NoFindings_CleanConfig(t *testing.T) {
+	d := makeTestSupplyChainDetector(nil)
+	cfg := &types.OpenClawConfig{
+		Skills: []types.SkillConfig{
+			{Name: "markdown-helper", Source: "clawhub://markdown-helper@1.0.0", Hash: "sha256:abc"},
+			{Name: "git-assistant", Source: "clawhub://git-assistant@2.1.0", Hash: "sha256:def"},
+		},
+	}
+	findings := d.checkS4EmptyHashes(cfg)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 S4 findings for clean official-source config, got %d", len(findings))
+	}
+}
+
+// TestSupplyChain_FindingIDs verifies every supply chain finding produced by Detect()
+// has one of the four known valid IDs and all mandatory fields populated.
+func TestSupplyChain_FindingIDs(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		// Return malicious for any skill to trigger S2
+		w.Write([]byte(`{"name":"test","malicious":true,"reason":"test reason"}`))
+	}))
+	defer server.Close()
+
+	d := makeTestSupplyChainDetector(server)
+	cfg := &types.OpenClawConfig{
+		Skills: []types.SkillConfig{
+			// Single skill triggers all four checks:
+			//   S1 — empty hash
+			//   S2 — mocked as malicious
+			//   S3 — non-clawhub source
+			//   S4 — "shell" keyword + non-clawhub source
+			{Name: "shell-evil", Source: "https://github.com/bad/shell-evil", Hash: ""},
+		},
+	}
+	findings := d.Detect(cfg)
+
+	validIDs := map[string]bool{
+		"SUPPLY_CHAIN-001": false,
+		"SUPPLY_CHAIN-002": false,
+		"SUPPLY_CHAIN-003": false,
+		"SUPPLY_CHAIN-004": false,
+	}
+
+	for _, f := range findings {
+		if _, ok := validIDs[f.ID]; !ok {
+			t.Errorf("unexpected finding ID: %s", f.ID)
+		}
+		validIDs[f.ID] = true
+		if f.Category == "" {
+			t.Errorf("finding %s has empty category", f.ID)
+		}
+		if f.Title == "" {
+			t.Errorf("finding %s has empty title", f.ID)
+		}
+		if f.Remediation == "" {
+			t.Errorf("finding %s has empty remediation", f.ID)
+		}
+	}
+
+	// All four IDs must have been seen
+	for id, seen := range validIDs {
+		if !seen {
+			t.Errorf("expected finding %s was not produced", id)
+		}
 	}
 }
