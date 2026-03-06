@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yourusername/clawsanitizer/internal/scanner"
-	"github.com/yourusername/clawsanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/scanner"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func TestScan_VulnerableConfig(t *testing.T) {
@@ -18,7 +18,7 @@ func TestScan_VulnerableConfig(t *testing.T) {
 
 	assert.NotEmpty(t, result.Findings)
 	assert.Less(t, result.Score, 100)
-	assert.Equal(t, 23, result.TotalChecks)
+	assert.Equal(t, 33, result.TotalChecks)
 
 	hasCritical := false
 	hasSupplyChain := false
