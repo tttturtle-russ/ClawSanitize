@@ -4,14 +4,21 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tttturtle-russ/clawsan/internal/scanner"
 )
 
+// Version is injected at build time via ldflags: -X github.com/tttturtle-russ/clawsan/cmd.Version=v1.x.x
+var Version = "dev"
+
 var rootCmd = &cobra.Command{
-	Use:   "clawsan",
-	Short: "Scan your OpenClaw installation for security vulnerabilities",
+	Use:     "clawsan",
+	Short:   "Scan your OpenClaw installation for security vulnerabilities",
+	Version: Version,
 }
 
 func Execute() {
+	scanner.Version = Version
+	rootCmd.Version = Version
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
