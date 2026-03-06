@@ -171,7 +171,7 @@ func (d *SkillContentDetector) checkSKILLMD(s *parser.InstalledSkill) []types.Fi
 		})
 	} else if m := reBidiCtrl.FindString(content); m != "" {
 		findings = append(findings, types.Finding{
-			ID:          "SKILL_CONTENT-007",
+			ID:          "SKILL_CONTENT-007B",
 			Severity:    types.SeverityHigh,
 			Category:    types.CategorySkillContent,
 			Title:       fmt.Sprintf("Skill '%s' SKILL.md contains bidirectional Unicode control characters", s.Slug),
@@ -181,7 +181,7 @@ func (d *SkillContentDetector) checkSKILLMD(s *parser.InstalledSkill) []types.Fi
 		})
 	} else if reANSIEscape.MatchString(content) {
 		findings = append(findings, types.Finding{
-			ID:          "SKILL_CONTENT-007",
+			ID:          "SKILL_CONTENT-007C",
 			Severity:    types.SeverityHigh,
 			Category:    types.CategorySkillContent,
 			Title:       fmt.Sprintf("Skill '%s' SKILL.md contains ANSI escape sequences", s.Slug),
@@ -345,7 +345,7 @@ func (d *SkillContentDetector) checkCodeFile(slug string, f *parser.SkillFile) [
 	}
 	if m := reHiddenBCC.FindString(content); m != "" {
 		findings = append(findings, types.Finding{
-			ID:          "SKILL_CONTENT-015",
+			ID:          "SKILL_CONTENT-015B",
 			Severity:    types.SeverityCritical,
 			Category:    types.CategorySkillContent,
 			Title:       fmt.Sprintf("Skill '%s' adds hidden BCC recipients to emails in %s", slug, f.Name),

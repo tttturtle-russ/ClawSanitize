@@ -71,7 +71,7 @@ func (d *SupplyChainDetector) checkS2ClawHubReputation(cfg *types.OpenClawConfig
 		}
 		if info.IsSuspicious || info.SecurityStatus == "suspicious" {
 			findings = append(findings, types.Finding{
-				ID:          "SUPPLY_CHAIN-002",
+				ID:          "SUPPLY_CHAIN-002B",
 				Severity:    types.SeverityHigh,
 				Category:    types.CategorySupplyChain,
 				Title:       fmt.Sprintf("Skill '%s' is flagged as suspicious on ClawHub", skill.Name),
@@ -187,7 +187,7 @@ func (d *SupplyChainDetector) checkC4ThinSKILLMD(skills []parser.InstalledSkill)
 		wordCount := len(strings.Fields(content))
 		if byteLen < 200 || wordCount < 50 {
 			findings = append(findings, types.Finding{
-				ID:          "SUPPLY_CHAIN-006",
+				ID:          "SUPPLY_CHAIN-006B",
 				Severity:    types.SeverityMedium,
 				Category:    types.CategorySupplyChain,
 				Title:       fmt.Sprintf("Skill '%s' has a suspiciously thin SKILL.md (%d bytes, %d words)", s.Slug, byteLen, wordCount),

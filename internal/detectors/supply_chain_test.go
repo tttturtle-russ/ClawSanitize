@@ -93,8 +93,8 @@ func TestSupplyChain_S2_SuspiciousSkill(t *testing.T) {
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 finding for suspicious skill, got %d", len(findings))
 	}
-	if findings[0].ID != "SUPPLY_CHAIN-002" {
-		t.Errorf("expected ID SUPPLY_CHAIN-002, got %s", findings[0].ID)
+	if findings[0].ID != "SUPPLY_CHAIN-002B" {
+		t.Errorf("expected ID SUPPLY_CHAIN-002B, got %s", findings[0].ID)
 	}
 	if findings[0].Severity != types.SeverityHigh {
 		t.Errorf("expected HIGH severity for suspicious skill, got %s", findings[0].Severity)
@@ -456,10 +456,11 @@ func TestSupplyChain_FindingIDs(t *testing.T) {
 	findings := d.Detect(cfg)
 
 	validIDs := map[string]bool{
-		"SUPPLY_CHAIN-001": false,
-		"SUPPLY_CHAIN-002": false,
-		"SUPPLY_CHAIN-003": false,
-		"SUPPLY_CHAIN-004": false,
+		"SUPPLY_CHAIN-001":  false,
+		"SUPPLY_CHAIN-002":  false,
+		"SUPPLY_CHAIN-003":  false,
+		"SUPPLY_CHAIN-004":  false,
+		"SUPPLY_CHAIN-002B": true,
 	}
 
 	for _, f := range findings {
