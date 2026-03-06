@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/yourusername/clawsanitizer/internal/output"
-	"github.com/yourusername/clawsanitizer/internal/scanner"
+	"github.com/tttturtle-russ/clawsan/internal/output"
+	"github.com/tttturtle-russ/clawsan/internal/scanner"
 )
 
 var scanPath string

@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "clawsanitizer",
+	Use:   "clawsan",
 	Short: "Scan your OpenClaw installation for security vulnerabilities",
 }
 

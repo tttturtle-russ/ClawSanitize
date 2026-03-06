@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yourusername/clawsanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 // PrintJSON marshals the ScanResult to JSON and writes to stdout

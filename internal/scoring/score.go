@@ -1,6 +1,6 @@
 package scoring
 
-import "github.com/yourusername/clawsanitizer/internal/types"
+import "github.com/tttturtle-russ/clawsan/internal/types"
 
 // CalculateScore computes a severity-weighted vulnerability score from 0-100.
 // Starts with base score of 100 and deducts points for each finding based on severity:

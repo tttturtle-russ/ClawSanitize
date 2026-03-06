@@ -8,7 +8,7 @@ fi
 
 VERSION="$1"
 OUTPUT_DIR="dist"
-BINARY="clawsanitizer"
+BINARY="clawsan"
 
 mkdir -p "$OUTPUT_DIR"
 

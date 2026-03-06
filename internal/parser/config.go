@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/yourusername/clawsanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 // ParseConfig reads and parses the OpenClaw config.json file

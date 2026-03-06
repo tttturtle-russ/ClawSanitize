@@ -3,8 +3,8 @@ package detectors
 import (
 	"testing"
 
-	"github.com/yourusername/clawsanitizer/internal/parser"
-	"github.com/yourusername/clawsanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/parser"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func TestDiscovery_D1_AgentsPoisoning(t *testing.T) {

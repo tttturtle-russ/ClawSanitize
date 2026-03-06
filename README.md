@@ -1,15 +1,15 @@
-# ClawSanitizer
+# clawsan
 
-ClawSanitizer is a security scanner for your OpenClaw installation. It checks for dangerous settings, malicious skills, and suspicious background instructions to keep your AI agent safe.
+clawsan is a security scanner for your OpenClaw installation. It checks for dangerous settings, malicious skills, and suspicious background instructions to keep your AI agent safe.
 
 ## Overview
-As you add more skills and capabilities to your AI agent, it becomes harder to know if everything is configured securely. ClawSanitizer automatically audits your OpenClaw setup against 23 safety checks, giving you a clear security score and actionable steps to fix any issues. This tool is designed for personal AI assistant users and maps findings to the OWASP Top 10 for LLM Applications.
+As you add more skills and capabilities to your AI agent, it becomes harder to know if everything is configured securely. clawsan automatically audits your OpenClaw setup against 23 safety checks, giving you a clear security score and actionable steps to fix any issues. This tool is designed for personal AI assistant users and maps findings to the OWASP Top 10 for LLM Applications.
 
 ## Installation
-If you have Go installed, you can install ClawSanitizer with this command:
+If you have Go installed, you can install clawsan with this command:
 
 ```bash
-go install github.com/yourusername/clawsanitizer@latest
+go install github.com/tttturtle-russ/clawsan@latest
 ```
 
 The tool will be installed to your Go binary folder (usually `~/go/bin`).
@@ -17,22 +17,22 @@ The tool will be installed to your Go binary folder (usually `~/go/bin`).
 ## Quick Start
 Scan your default OpenClaw installation:
 ```bash
-clawsanitizer scan
+clawsan scan
 ```
 
 Scan a specific folder:
 ```bash
-clawsanitizer scan /path/to/openclaw
+clawsan scan /path/to/openclaw
 ```
 
 Or using the path flag:
 ```bash
-clawsanitizer scan --path /path/to/openclaw
+clawsan scan --path /path/to/openclaw
 ```
 
 Save results as a file:
 ```bash
-clawsanitizer scan --json > results.json
+clawsan scan --json > results.json
 ```
 
 ## Usage
@@ -42,7 +42,7 @@ The `scan` command supports the following options:
 *   `--json`: Output the results in JSON format instead of a human-readable table.
 
 ## What It Checks
-ClawSanitizer performs 23 specific checks across four categories:
+clawsan performs 23 specific checks across four categories:
 
 ### Supply Chain (S1-S4)
 Checks if the skills you've installed are authentic and safe.
@@ -113,12 +113,12 @@ Each scan provides a **Security Score** out of 100. The score starts at 100 and 
 
 ## Contributing
 
-ClawSanitizer is an open-source project and we welcome your contributions.
+clawsan is an open-source project and we welcome your contributions.
 
 ### Reporting Bugs
 If you find a security issue or a bug in the scanner, please open a GitHub issue with:
 *   A clear description of the problem.
-*   The version of ClawSanitizer you're using.
+*   The version of clawsan you're using.
 *   Steps to reproduce the issue (if possible).
 
 ### Development Setup
@@ -139,7 +139,7 @@ To contribute code, you'll need Go installed on your machine.
     ```
 5.  Build the project locally:
     ```bash
-    go build -o clawsanitizer
+    go build -o clawsan
     ```
 
 ### Submitting Pull Requests

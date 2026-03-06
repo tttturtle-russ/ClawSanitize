@@ -6,8 +6,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/yourusername/clawsanitizer/internal/parser"
-	"github.com/yourusername/clawsanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/parser"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 type DiscoveryDetector struct{}

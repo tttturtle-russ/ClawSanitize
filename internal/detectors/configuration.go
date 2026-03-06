@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yourusername/clawsanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 // ConfigurationDetector checks for dangerous OpenClaw configuration settings

@@ -2,7 +2,7 @@
 set -e
 VERSION="${VERSION:-dev}"
 OUTPUT_DIR="dist"
-BINARY="clawsanitizer"
+BINARY="clawsan"
 
 mkdir -p "$OUTPUT_DIR"
 

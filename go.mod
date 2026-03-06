@@ -1,4 +1,4 @@
-module github.com/yourusername/clawsanitizer
+module github.com/tttturtle-russ/clawsan
 
 go 1.21
 
