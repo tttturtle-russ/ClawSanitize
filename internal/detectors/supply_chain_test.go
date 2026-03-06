@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yourusername/clawsanitizer/internal/api"
-	"github.com/yourusername/clawsanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/api"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func makeTestSupplyChainDetector(server *httptest.Server) *SupplyChainDetector {
@@ -17,6 +17,22 @@ func makeTestSupplyChainDetector(server *httptest.Server) *SupplyChainDetector {
 		client.BaseURL = server.URL
 	}
 	return &SupplyChainDetector{ClawHub: client}
+}
+
+// skillHandler returns an httptest handler that serves:
+//
+//	GET /skills/{slug}           → skillBody
+//	GET /skills/{slug}/versions/* → versionBody (if non-empty)
+func skillHandler(skillBody, versionBody string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) >= 3 && parts[2] == "versions" && versionBody != "" {
+			w.Write([]byte(versionBody))
+			return
+		}
+		w.Write([]byte(skillBody))
+	}
 }
 
 func TestSupplyChain_S1_MissingHash(t *testing.T) {
@@ -39,10 +55,8 @@ func TestSupplyChain_S1_MissingHash(t *testing.T) {
 }
 
 func TestSupplyChain_S2_MaliciousSkill(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"name":"evil-skill","malicious":true,"reason":"Known data exfiltration tool"}`))
-	}))
+	skillBody := `{"skill":{"slug":"evil-skill","displayName":"Evil Skill"},"latestVersion":{"version":"1.0.0"},"moderation":{"isMalwareBlocked":true,"isSuspicious":false}}`
+	server := httptest.NewServer(skillHandler(skillBody, ""))
 	defer server.Close()
 
 	d := makeTestSupplyChainDetector(server)
@@ -57,6 +71,51 @@ func TestSupplyChain_S2_MaliciousSkill(t *testing.T) {
 	}
 	if findings[0].ID != "SUPPLY_CHAIN-002" {
 		t.Errorf("expected ID SUPPLY_CHAIN-002, got %s", findings[0].ID)
+	}
+	if findings[0].Severity != types.SeverityCritical {
+		t.Errorf("expected CRITICAL severity, got %s", findings[0].Severity)
+	}
+}
+
+func TestSupplyChain_S2_SuspiciousSkill(t *testing.T) {
+	skillBody := `{"skill":{"slug":"feed-watcher","displayName":"Feed Watcher"},"latestVersion":{"version":"1.2.0"},"moderation":null}`
+	versionBody := `{"version":{"version":"1.2.0","security":{"status":"suspicious","hasWarnings":true,"checkedAt":1772465516623,"model":"gpt-5-mini"}}}`
+	server := httptest.NewServer(skillHandler(skillBody, versionBody))
+	defer server.Close()
+
+	d := makeTestSupplyChainDetector(server)
+	cfg := &types.OpenClawConfig{
+		Skills: []types.SkillConfig{
+			{Name: "feed-watcher", Source: "clawhub://feed-watcher@1.2.0", Hash: "abc123"},
+		},
+	}
+	findings := d.checkS2ClawHubReputation(cfg)
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding for suspicious skill, got %d", len(findings))
+	}
+	if findings[0].ID != "SUPPLY_CHAIN-002" {
+		t.Errorf("expected ID SUPPLY_CHAIN-002, got %s", findings[0].ID)
+	}
+	if findings[0].Severity != types.SeverityHigh {
+		t.Errorf("expected HIGH severity for suspicious skill, got %s", findings[0].Severity)
+	}
+}
+
+func TestSupplyChain_S2_MaliciousViaSecurityStatus(t *testing.T) {
+	skillBody := `{"skill":{"slug":"data-harvester-v2","displayName":"Data Harvester"},"latestVersion":{"version":"2.0.0"},"moderation":null}`
+	versionBody := `{"version":{"version":"2.0.0","security":{"status":"malicious","hasWarnings":true,"checkedAt":1772465516623,"model":"gpt-5-mini"}}}`
+	server := httptest.NewServer(skillHandler(skillBody, versionBody))
+	defer server.Close()
+
+	d := makeTestSupplyChainDetector(server)
+	cfg := &types.OpenClawConfig{
+		Skills: []types.SkillConfig{
+			{Name: "data-harvester-v2", Source: "clawhub://data-harvester-v2@2.0.0", Hash: "abc123"},
+		},
+	}
+	findings := d.checkS2ClawHubReputation(cfg)
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding for malicious security status, got %d", len(findings))
 	}
 	if findings[0].Severity != types.SeverityCritical {
 		t.Errorf("expected CRITICAL severity, got %s", findings[0].Severity)
@@ -157,10 +216,9 @@ func TestSupplyChain_S2_OfflineGracefulFallback(t *testing.T) {
 }
 
 func TestSupplyChain_S2_CleanSkill(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"name":"clean-skill","malicious":false,"reason":""}`))
-	}))
+	skillBody := `{"skill":{"slug":"clean-skill","displayName":"Clean Skill"},"latestVersion":{"version":"1.0.0"},"moderation":null}`
+	versionBody := `{"version":{"version":"1.0.0","security":{"status":"clean","hasWarnings":false,"checkedAt":1772465516623,"model":"gpt-5-mini"}}}`
+	server := httptest.NewServer(skillHandler(skillBody, versionBody))
 	defer server.Close()
 
 	d := makeTestSupplyChainDetector(server)
@@ -332,18 +390,16 @@ func TestSupplyChain_S4_NoSkills(t *testing.T) {
 	}
 }
 
-// TestSupplyChain_S2_KnownBadSkill verifies all fields of a malicious-flagged skill finding
-// (S2 check with a mocked ClawHub returning malicious=true and a descriptive reason string).
 func TestSupplyChain_S2_KnownBadSkill(t *testing.T) {
 	const skillName = "credential-harvester"
-	const reason = "Exfiltrates API keys to remote C2 server"
 
+	skillBody := fmt.Sprintf(`{"skill":{"slug":%q,"displayName":%q},"latestVersion":{"version":"0.1.0"},"moderation":{"isMalwareBlocked":true,"isSuspicious":false}}`, skillName, skillName)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.URL.Path, skillName) {
 			t.Errorf("unexpected request path: %s", r.URL.Path)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"name":%q,"malicious":true,"reason":%q}`, skillName, reason)
+		w.Write([]byte(skillBody))
 	}))
 	defer server.Close()
 
@@ -370,13 +426,8 @@ func TestSupplyChain_S2_KnownBadSkill(t *testing.T) {
 	if !strings.Contains(f.Title, skillName) {
 		t.Errorf("title should mention skill name %q, got: %s", skillName, f.Title)
 	}
-	if !strings.Contains(f.Description, reason) {
-		t.Errorf("description should contain reason %q, got: %s", reason, f.Description)
-	}
 }
 
-// TestSupplyChain_S4_NoFindings_CleanConfig verifies a config with only clean, official
-// skills (no dangerous keywords, official source) produces zero S4 findings.
 func TestSupplyChain_S4_NoFindings_CleanConfig(t *testing.T) {
 	d := makeTestSupplyChainDetector(nil)
 	cfg := &types.OpenClawConfig{
@@ -391,24 +442,14 @@ func TestSupplyChain_S4_NoFindings_CleanConfig(t *testing.T) {
 	}
 }
 
-// TestSupplyChain_FindingIDs verifies every supply chain finding produced by Detect()
-// has one of the four known valid IDs and all mandatory fields populated.
 func TestSupplyChain_FindingIDs(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		// Return malicious for any skill to trigger S2
-		w.Write([]byte(`{"name":"test","malicious":true,"reason":"test reason"}`))
-	}))
+	skillBody := `{"skill":{"slug":"shell-evil","displayName":"Shell Evil"},"latestVersion":{"version":"1.0.0"},"moderation":{"isMalwareBlocked":true,"isSuspicious":false}}`
+	server := httptest.NewServer(skillHandler(skillBody, ""))
 	defer server.Close()
 
 	d := makeTestSupplyChainDetector(server)
 	cfg := &types.OpenClawConfig{
 		Skills: []types.SkillConfig{
-			// Single skill triggers all four checks:
-			//   S1 — empty hash
-			//   S2 — mocked as malicious
-			//   S3 — non-clawhub source
-			//   S4 — "shell" keyword + non-clawhub source
 			{Name: "shell-evil", Source: "https://github.com/bad/shell-evil", Hash: ""},
 		},
 	}
@@ -437,7 +478,6 @@ func TestSupplyChain_FindingIDs(t *testing.T) {
 		}
 	}
 
-	// All four IDs must have been seen
 	for id, seen := range validIDs {
 		if !seen {
 			t.Errorf("expected finding %s was not produced", id)
