@@ -10,7 +10,6 @@ import (
 	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
-// ParseConfig reads and parses the OpenClaw config.json file
 func ParseConfig(path string) (*types.OpenClawConfig, error) {
 	// Expand ~ to home directory
 	if strings.HasPrefix(path, "~/") {
@@ -21,7 +20,7 @@ func ParseConfig(path string) (*types.OpenClawConfig, error) {
 		path = filepath.Join(home, path[2:])
 	}
 
-	configPath := filepath.Join(path, "config.json")
+	configPath := filepath.Join(path, "openclaw.json")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not read config file %s: %w", configPath, err)

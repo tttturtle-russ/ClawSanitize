@@ -1,7 +1,6 @@
 package detectors
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"strings"
 
@@ -10,49 +9,25 @@ import (
 	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
-// SupplyChainDetector checks for supply chain vulnerabilities in installed skills
 type SupplyChainDetector struct {
 	ClawHub *api.ClawHubClient
 }
 
-// NewSupplyChainDetector creates a detector with a real ClawHub client
 func NewSupplyChainDetector() *SupplyChainDetector {
 	return &SupplyChainDetector{ClawHub: api.NewClawHubClient()}
 }
 
-// Detect runs all S1-S4 supply chain checks
-func (d *SupplyChainDetector) Detect(cfg *types.OpenClawConfig) []types.Finding {
+func (d *SupplyChainDetector) Detect(skills []parser.InstalledSkill) []types.Finding {
 	var findings []types.Finding
-	findings = append(findings, d.checkS1HashVerification(cfg)...)
-	findings = append(findings, d.checkS2ClawHubReputation(cfg)...)
-	findings = append(findings, d.checkS3UnofficialSources(cfg)...)
-	findings = append(findings, d.checkS4EmptyHashes(cfg)...)
+	findings = append(findings, d.checkS2ClawHubReputation(skills)...)
+	findings = append(findings, d.checkS4DangerousName(skills)...)
 	return findings
 }
 
-func (d *SupplyChainDetector) checkS1HashVerification(cfg *types.OpenClawConfig) []types.Finding {
+func (d *SupplyChainDetector) checkS2ClawHubReputation(skills []parser.InstalledSkill) []types.Finding {
 	var findings []types.Finding
-	for _, skill := range cfg.Skills {
-		if skill.Hash == "" {
-			findings = append(findings, types.Finding{
-				ID:          "SUPPLY_CHAIN-001",
-				Severity:    types.SeverityHigh,
-				Category:    types.CategorySupplyChain,
-				Title:       fmt.Sprintf("Skill '%s' has no integrity hash", skill.Name),
-				Description: fmt.Sprintf("The skill '%s' is installed without a cryptographic hash. This means its code cannot be verified for tampering.", skill.Name),
-				Remediation: "Re-install the skill from ClawHub to get a verified hash, or remove the skill if it came from an unofficial source.",
-				OWASP:       types.OWASPLLM03,
-				CWE:         "CWE-494: Download of Code Without Integrity Check",
-			})
-		}
-	}
-	return findings
-}
-
-func (d *SupplyChainDetector) checkS2ClawHubReputation(cfg *types.OpenClawConfig) []types.Finding {
-	var findings []types.Finding
-	for _, skill := range cfg.Skills {
-		info, err := d.ClawHub.CheckSkillReputation(skill.Name)
+	for _, skill := range skills {
+		info, err := d.ClawHub.CheckSkillReputation(skill.Slug)
 		if err != nil || info == nil {
 			continue
 		}
@@ -65,8 +40,8 @@ func (d *SupplyChainDetector) checkS2ClawHubReputation(cfg *types.OpenClawConfig
 				ID:          "SUPPLY_CHAIN-002",
 				Severity:    types.SeverityCritical,
 				Category:    types.CategorySupplyChain,
-				Title:       fmt.Sprintf("Skill '%s' is flagged as malicious on ClawHub", skill.Name),
-				Description: fmt.Sprintf("ClawHub's registry has flagged '%s' as malicious. Reason: %s", skill.Name, reason),
+				Title:       fmt.Sprintf("Skill '%s' is flagged as malicious on ClawHub", skill.Slug),
+				Description: fmt.Sprintf("ClawHub's registry has flagged '%s' as malicious. Reason: %s", skill.Slug, reason),
 				Remediation: "Immediately remove this skill. Go to OpenClaw Settings → Skills → Remove.",
 				OWASP:       types.OWASPLLM03,
 				CWE:         "CWE-829: Inclusion of Functionality from Untrusted Control Sphere",
@@ -78,8 +53,8 @@ func (d *SupplyChainDetector) checkS2ClawHubReputation(cfg *types.OpenClawConfig
 				ID:          "SUPPLY_CHAIN-002B",
 				Severity:    types.SeverityHigh,
 				Category:    types.CategorySupplyChain,
-				Title:       fmt.Sprintf("Skill '%s' is flagged as suspicious on ClawHub", skill.Name),
-				Description: fmt.Sprintf("ClawHub's security scan has flagged '%s' as suspicious. It may contain harmful instructions or attempt to exfiltrate data.", skill.Name),
+				Title:       fmt.Sprintf("Skill '%s' is flagged as suspicious on ClawHub", skill.Slug),
+				Description: fmt.Sprintf("ClawHub's security scan has flagged '%s' as suspicious. It may contain harmful instructions or attempt to exfiltrate data.", skill.Slug),
 				Remediation: "Review this skill's SKILL.md and source code before continuing to use it. Consider removing it if you cannot verify its safety.",
 				OWASP:       types.OWASPLLM03,
 				CWE:         "CWE-829: Inclusion of Functionality from Untrusted Control Sphere",
@@ -89,45 +64,23 @@ func (d *SupplyChainDetector) checkS2ClawHubReputation(cfg *types.OpenClawConfig
 	return findings
 }
 
-func (d *SupplyChainDetector) checkS3UnofficialSources(cfg *types.OpenClawConfig) []types.Finding {
-	var findings []types.Finding
-	for _, skill := range cfg.Skills {
-		if skill.Source == "" {
-			continue
-		}
-		if !strings.HasPrefix(skill.Source, "clawhub://") {
-			findings = append(findings, types.Finding{
-				ID:          "SUPPLY_CHAIN-003",
-				Severity:    types.SeverityMedium,
-				Category:    types.CategorySupplyChain,
-				Title:       fmt.Sprintf("Skill '%s' is from an unofficial source", skill.Name),
-				Description: fmt.Sprintf("'%s' was installed from '%s' which is not the official ClawHub marketplace. Skills from unofficial sources have not been reviewed for malware.", skill.Name, skill.Source),
-				Remediation: "Only install skills from the official ClawHub marketplace (clawhub://). Remove this skill and find an official alternative.",
-				OWASP:       types.OWASPLLM03,
-				CWE:         "CWE-829: Inclusion of Functionality from Untrusted Control Sphere",
-			})
-		}
-	}
-	return findings
-}
-
-func (d *SupplyChainDetector) checkS4EmptyHashes(cfg *types.OpenClawConfig) []types.Finding {
-	if len(cfg.Skills) == 0 {
+func (d *SupplyChainDetector) checkS4DangerousName(skills []parser.InstalledSkill) []types.Finding {
+	if len(skills) == 0 {
 		return nil
 	}
 	var findings []types.Finding
 	dangerousPatterns := []string{"shell", "exec", "execute", "root", "sudo", "admin", "system"}
-	for _, skill := range cfg.Skills {
-		nameLower := strings.ToLower(skill.Name)
+	for _, skill := range skills {
+		nameLower := strings.ToLower(skill.Slug)
 		for _, pattern := range dangerousPatterns {
-			if strings.Contains(nameLower, pattern) && !strings.HasPrefix(skill.Source, "clawhub://") {
+			if strings.Contains(nameLower, pattern) {
 				findings = append(findings, types.Finding{
 					ID:          "SUPPLY_CHAIN-004",
 					Severity:    types.SeverityHigh,
 					Category:    types.CategorySupplyChain,
-					Title:       fmt.Sprintf("Skill '%s' has a high-risk name from an unverified source", skill.Name),
-					Description: fmt.Sprintf("'%s' has a name suggesting elevated system access ('%s') and is not from the official ClawHub marketplace.", skill.Name, pattern),
-					Remediation: "Remove this skill immediately unless you explicitly installed it from a trusted source and understand its purpose.",
+					Title:       fmt.Sprintf("Skill '%s' has a high-risk name suggesting elevated system access", skill.Slug),
+					Description: fmt.Sprintf("'%s' contains '%s', suggesting it may perform elevated system operations. Verify this skill is from a trusted source and is intentionally installed.", skill.Slug, pattern),
+					Remediation: "Remove this skill unless you explicitly installed it from a trusted source and understand its purpose.",
 					OWASP:       types.OWASPLLM03,
 					CWE:         "CWE-829: Inclusion of Functionality from Untrusted Control Sphere",
 				})
@@ -138,45 +91,10 @@ func (d *SupplyChainDetector) checkS4EmptyHashes(cfg *types.OpenClawConfig) []ty
 	return findings
 }
 
-func (d *SupplyChainDetector) CheckSkillMetadata(cfg *types.OpenClawConfig, skills []parser.InstalledSkill) []types.Finding {
+func (d *SupplyChainDetector) CheckSkillMetadata(skills []parser.InstalledSkill) []types.Finding {
 	var findings []types.Finding
-	findings = append(findings, d.checkC3RugPull(cfg, skills)...)
 	findings = append(findings, d.checkC4ThinSKILLMD(skills)...)
 	findings = append(findings, d.checkC5NoLicense(skills)...)
-	return findings
-}
-
-func (d *SupplyChainDetector) checkC3RugPull(cfg *types.OpenClawConfig, skills []parser.InstalledSkill) []types.Finding {
-	skillMap := make(map[string]*parser.InstalledSkill, len(skills))
-	for i := range skills {
-		skillMap[skills[i].Slug] = &skills[i]
-	}
-
-	var findings []types.Finding
-	for _, sc := range cfg.Skills {
-		if sc.Hash == "" {
-			continue
-		}
-		installed, ok := skillMap[sc.Name]
-		if !ok || installed.SkillMD == nil {
-			continue
-		}
-		sum := sha256.Sum256([]byte(installed.SkillMD.Content))
-		computed := fmt.Sprintf("sha256:%x", sum)
-		if !strings.EqualFold(sc.Hash, computed) {
-			findings = append(findings, types.Finding{
-				ID:          "SUPPLY_CHAIN-005",
-				Severity:    types.SeverityCritical,
-				Category:    types.CategorySupplyChain,
-				Title:       fmt.Sprintf("Skill '%s' SKILL.md hash does not match config (rug pull)", sc.Name),
-				Description: fmt.Sprintf("The SKILL.md for '%s' has been modified after installation. Config hash: %s. Computed hash: %s. This is the signature of a post-install rug pull attack.", sc.Name, sc.Hash, computed),
-				Remediation: "Reinstall this skill from ClawHub to get a clean verified copy. If the issue persists, remove the skill.",
-				FilePath:    installed.SkillMD.Path,
-				OWASP:       types.OWASPLLM03,
-				CWE:         "CWE-494: Download of Code Without Integrity Check",
-			})
-		}
-	}
 	return findings
 }
 

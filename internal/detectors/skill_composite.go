@@ -15,10 +15,9 @@ func NewSkillCompositeDetector() *SkillCompositeDetector {
 	return &SkillCompositeDetector{}
 }
 
-func (d *SkillCompositeDetector) Detect(skillConfigs []types.SkillConfig, skills []parser.InstalledSkill) []types.Finding {
+func (d *SkillCompositeDetector) Detect(skills []parser.InstalledSkill) []types.Finding {
 	var findings []types.Finding
 	findings = append(findings, d.checkF1CredExfilInSameFile(skills)...)
-	findings = append(findings, d.checkF2TyposquatNoHashUnofficial(skillConfigs, skills)...)
 	findings = append(findings, d.checkF3PlatformImpersonationWithIOC(skills)...)
 	findings = append(findings, d.checkG1AlwaysTrueEnvHeavy(skills)...)
 	findings = append(findings, d.checkG2OpenClawInternalPaths(skills)...)
@@ -50,31 +49,6 @@ func (d *SkillCompositeDetector) checkF1CredExfilInSameFile(skills []parser.Inst
 					CWE:         "CWE-200: Exposure of Sensitive Information to an Unauthorized Actor",
 				})
 			}
-		}
-	}
-	return findings
-}
-
-func (d *SkillCompositeDetector) checkF2TyposquatNoHashUnofficial(skillConfigs []types.SkillConfig, skills []parser.InstalledSkill) []types.Finding {
-	installed := NewSkillIdentityDetector()
-	var findings []types.Finding
-	for _, sc := range skillConfigs {
-		if strings.HasPrefix(sc.Source, "clawhub://") || sc.Hash != "" {
-			continue
-		}
-		b2 := installed.checkB2Typosquatting(sc.Name)
-		b3 := installed.checkB3SemanticSubstitution(sc.Name)
-		if len(b2) > 0 || len(b3) > 0 {
-			findings = append(findings, types.Finding{
-				ID:          "SKILL_CONTENT-022",
-				Severity:    types.SeverityCritical,
-				Category:    types.CategorySkillContent,
-				Title:       fmt.Sprintf("Skill '%s': typosquat name + no hash + unofficial source (high-confidence attack)", sc.Name),
-				Description: fmt.Sprintf("Skill '%s' combines three attack indicators: its name typosquats a known target, it has no integrity hash, and it comes from an unofficial source. This is a high-confidence supply chain attack.", sc.Name),
-				Remediation: "Remove this skill immediately.",
-				OWASP:       types.OWASPLLM03,
-				CWE:         "CWE-829: Inclusion of Functionality from Untrusted Control Sphere",
-			})
 		}
 	}
 	return findings

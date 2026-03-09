@@ -21,8 +21,6 @@ func (d *RuntimeDetector) Detect(workspace *parser.WorkspaceData, tools []parser
 	findings = append(findings, d.checkR2MobileNodePermissionAudit(workspace, tools)...)
 	findings = append(findings, d.checkR3BrowserCDPExposure(cfg, tools)...)
 	findings = append(findings, d.checkR4WebhookEndpointAuth(cfg)...)
-	findings = append(findings, d.checkR5ChannelAllowlistIntegrity(cfg)...)
-	findings = append(findings, d.checkR6SessionIsolation(cfg)...)
 	return findings
 }
 
@@ -221,9 +219,12 @@ func (d *RuntimeDetector) checkR4WebhookEndpointAuth(cfg *types.OpenClawConfig) 
 		return nil
 	}
 
-	bindLower := strings.ToLower(strings.TrimSpace(cfg.Gateway.Bind))
-	isLoopback := strings.HasPrefix(bindLower, "127.0.0.1")
-	if cfg.Gateway.Auth || isLoopback {
+	bind := strings.TrimSpace(cfg.Gateway.Bind)
+	isLoopbackBind := bind == "" || bind == "loopback"
+	if isLoopbackBind {
+		return nil
+	}
+	if gatewayHasAuth(cfg) {
 		return nil
 	}
 
@@ -232,58 +233,11 @@ func (d *RuntimeDetector) checkR4WebhookEndpointAuth(cfg *types.OpenClawConfig) 
 		Severity:    types.SeverityHigh,
 		Category:    types.CategoryRuntime,
 		Title:       "Webhook gateway is exposed without authentication",
-		Description: "Gateway authentication is disabled while the bind address is non-loopback, which can expose webhook endpoints to untrusted network clients.",
-		Remediation: "Enable gateway authentication and bind to 127.0.0.1 unless remote webhook access is strictly required and additionally protected.",
+		Description: fmt.Sprintf("gateway.bind is '%s' (non-loopback) with no authentication configured. Webhook endpoints are reachable by untrusted network clients.", bind),
+		Remediation: "Enable gateway authentication (gateway.auth.mode=token) or change gateway.bind to loopback.",
 		FilePath:    "gateway.bind",
 		OWASP:       types.OWASPLLM06,
 		CWE:         "CWE-306: Missing Authentication for Critical Function",
-	}}
-}
-
-func (d *RuntimeDetector) checkR5ChannelAllowlistIntegrity(cfg *types.OpenClawConfig) []types.Finding {
-	if cfg == nil {
-		return nil
-	}
-
-	for _, channel := range cfg.AllowFrom {
-		trimmed := strings.TrimSpace(channel)
-		if trimmed == "*" || trimmed == ".*" || trimmed == "@*" {
-			return []types.Finding{{
-				ID:          "RUNTIME-005",
-				Severity:    types.SeverityMedium,
-				Category:    types.CategoryRuntime,
-				Title:       "Allowlist contains wildcard channel pattern",
-				Description: fmt.Sprintf("allowFrom includes '%s', which effectively disables sender/channel restrictions.", trimmed),
-				Remediation: "Replace wildcard allowFrom entries with explicit trusted user/channel identifiers.",
-				FilePath:    "allowFrom",
-				OWASP:       types.OWASPLLM06,
-				CWE:         "CWE-284: Improper Access Control",
-			}}
-		}
-	}
-
-	return nil
-}
-
-func (d *RuntimeDetector) checkR6SessionIsolation(cfg *types.OpenClawConfig) []types.Finding {
-	if cfg == nil {
-		return nil
-	}
-
-	if !strings.EqualFold(cfg.DMPolicy, "open") || len(cfg.AllowFrom) <= 3 {
-		return nil
-	}
-
-	return []types.Finding{{
-		ID:          "RUNTIME-006",
-		Severity:    types.SeverityMedium,
-		Category:    types.CategoryRuntime,
-		Title:       "Open DM policy spans too many channels",
-		Description: fmt.Sprintf("dmPolicy is 'open' and allowFrom includes %d channels, increasing cross-channel session and context exposure risk.", len(cfg.AllowFrom)),
-		Remediation: "Reduce allowFrom to a small trusted set or move dmPolicy to 'closed' to isolate runtime sessions.",
-		FilePath:    "allowFrom",
-		OWASP:       types.OWASPLLM06,
-		CWE:         "CWE-284: Improper Access Control",
 	}}
 }
 

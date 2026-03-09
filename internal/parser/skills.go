@@ -26,7 +26,7 @@ type InstalledSkill struct {
 	License   *SkillFile
 }
 
-func ParseSkillFiles(installRoot string, slugs []string) ([]InstalledSkill, error) {
+func ParseSkillFiles(installRoot string) ([]InstalledSkill, error) {
 	if strings.HasPrefix(installRoot, "~/") {
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -37,12 +37,21 @@ func ParseSkillFiles(installRoot string, slugs []string) ([]InstalledSkill, erro
 
 	skillsRoot := filepath.Join(installRoot, "skills")
 
+	dirs, err := os.ReadDir(skillsRoot)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
 	var result []InstalledSkill
-	for _, slug := range slugs {
-		skillDir := filepath.Join(skillsRoot, slug)
-		if _, err := os.Stat(skillDir); os.IsNotExist(err) {
+	for _, d := range dirs {
+		if !d.IsDir() {
 			continue
 		}
+		slug := d.Name()
+		skillDir := filepath.Join(skillsRoot, slug)
 		skill := InstalledSkill{Slug: slug}
 		entries, err := os.ReadDir(skillDir)
 		if err != nil {

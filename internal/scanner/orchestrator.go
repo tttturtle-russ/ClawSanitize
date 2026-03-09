@@ -9,7 +9,6 @@ import (
 	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
-// Version is set at build time via -ldflags "-X github.com/tttturtle-russ/clawsan/internal/scanner.Version=v1.2.3"
 var Version = "dev"
 
 func Scan(path string) (*types.ScanResult, error) {
@@ -34,11 +33,7 @@ func Scan(path string) (*types.ScanResult, error) {
 		tools = []parser.MCPTool{}
 	}
 
-	slugs := make([]string, len(cfg.Skills))
-	for i, s := range cfg.Skills {
-		slugs[i] = s.Name
-	}
-	installedSkills, err := parser.ParseSkillFiles(path, slugs)
+	installedSkills, err := parser.ParseSkillFiles(path)
 	if err != nil {
 		warnings = append(warnings, "could not parse skill files: "+err.Error())
 		installedSkills = nil
@@ -47,9 +42,9 @@ func Scan(path string) (*types.ScanResult, error) {
 	var allFindings []types.Finding
 
 	supplyChain := detectors.NewSupplyChainDetector()
-	allFindings = append(allFindings, supplyChain.Detect(cfg)...)
+	allFindings = append(allFindings, supplyChain.Detect(installedSkills)...)
 	if len(installedSkills) > 0 {
-		allFindings = append(allFindings, supplyChain.CheckSkillMetadata(cfg, installedSkills)...)
+		allFindings = append(allFindings, supplyChain.CheckSkillMetadata(installedSkills)...)
 	}
 
 	configuration := detectors.NewConfigurationDetector()
@@ -61,6 +56,11 @@ func Scan(path string) (*types.ScanResult, error) {
 	runtime := detectors.NewRuntimeDetector()
 	allFindings = append(allFindings, runtime.Detect(workspace, tools, cfg)...)
 
+	slugs := make([]string, len(installedSkills))
+	for i, s := range installedSkills {
+		slugs[i] = s.Slug
+	}
+
 	if len(installedSkills) > 0 {
 		skillContent := detectors.NewSkillContentDetector()
 		allFindings = append(allFindings, skillContent.Detect(installedSkills)...)
@@ -69,7 +69,7 @@ func Scan(path string) (*types.ScanResult, error) {
 		allFindings = append(allFindings, skillIdentity.Detect(slugs)...)
 
 		composite := detectors.NewSkillCompositeDetector()
-		allFindings = append(allFindings, composite.Detect(cfg.Skills, installedSkills)...)
+		allFindings = append(allFindings, composite.Detect(installedSkills)...)
 	} else {
 		skillIdentity := detectors.NewSkillIdentityDetector()
 		allFindings = append(allFindings, skillIdentity.Detect(slugs)...)

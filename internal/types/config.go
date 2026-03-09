@@ -1,35 +1,105 @@
 package types
 
-// OpenClawConfig represents the OpenClaw configuration file (~/.openclaw/config.json)
+// OpenClawConfig represents the real openclaw configuration file (~/.openclaw/openclaw.json)
 type OpenClawConfig struct {
-	DangerouslySkipPermissions bool            `json:"dangerously_skip_permissions"`
-	DMPolicy                   string          `json:"dmPolicy"`
-	AllowFrom                  []string        `json:"allowFrom"`
-	WorkspaceDir               string          `json:"workspace_dir"`
-	APIKey                     string          `json:"api_key"`
-	Gateway                    GatewayConfig   `json:"gateway"`
-	Tailscale                  TailscaleConfig `json:"tailscale"`
-	SSH                        SSHConfig       `json:"ssh"`
-	Skills                     []SkillConfig   `json:"skills"`
+	Gateway   GatewayConfig   `json:"gateway"`
+	Agents    AgentsConfig    `json:"agents"`
+	Skills    SkillsConfig    `json:"skills"`
+	Logging   LoggingConfig   `json:"logging"`
+	Discovery DiscoveryConfig `json:"discovery"`
+	Tools     ToolsConfig     `json:"tools"`
+	Meta      MetaConfig      `json:"meta"`
 }
 
 type GatewayConfig struct {
-	Bind string `json:"bind"`
-	Auth bool   `json:"auth"`
+	Mode                string           `json:"mode"` // "local" | "remote"
+	Bind                string           `json:"bind"` // "loopback" | "lan" | "tailnet" | "auto" | "custom"
+	Auth                GatewayAuth      `json:"auth"`
+	ControlUi           GatewayControlUi `json:"controlUi"`
+	Tailscale           GatewayTailscale `json:"tailscale"`
+	TrustedProxies      []string         `json:"trustedProxies"`
+	AllowRealIpFallback bool             `json:"allowRealIpFallback"`
 }
 
-type TailscaleConfig struct {
-	Enabled bool `json:"enabled"`
-	Auth    bool `json:"auth"`
+type GatewayAuth struct {
+	Mode         string                `json:"mode"` // "none" | "token" | "password" | "trusted-proxy"
+	Token        string                `json:"token"`
+	Password     string                `json:"password"`
+	TrustedProxy *GatewayTrustedProxy  `json:"trustedProxy"`
+	RateLimit    *GatewayAuthRateLimit `json:"rateLimit"`
 }
 
-type SSHConfig struct {
-	Enabled bool `json:"enabled"`
-	Auth    bool `json:"auth"`
+type GatewayControlUi struct {
+	Enabled                                  bool     `json:"enabled"`
+	AllowedOrigins                           []string `json:"allowedOrigins"`
+	DangerouslyAllowHostHeaderOriginFallback bool     `json:"dangerouslyAllowHostHeaderOriginFallback"`
+	DangerouslyDisableDeviceAuth             bool     `json:"dangerouslyDisableDeviceAuth"`
+	AllowInsecureAuth                        bool     `json:"allowInsecureAuth"`
 }
 
-type SkillConfig struct {
-	Name   string `json:"name"`
-	Source string `json:"source"`
-	Hash   string `json:"hash"`
+type GatewayTailscale struct {
+	Mode        string `json:"mode"` // "off" | "serve" | "funnel"
+	ResetOnExit bool   `json:"resetOnExit"`
+}
+
+type GatewayTrustedProxy struct {
+	UserHeader      string   `json:"userHeader"`
+	RequiredHeaders []string `json:"requiredHeaders"`
+	AllowUsers      []string `json:"allowUsers"`
+}
+
+type GatewayAuthRateLimit struct {
+	MaxAttempts int `json:"maxAttempts"`
+	WindowMs    int `json:"windowMs"`
+	LockoutMs   int `json:"lockoutMs"`
+}
+
+type AgentsConfig struct {
+	Defaults AgentDefaults `json:"defaults"`
+}
+
+type AgentDefaults struct {
+	Workspace     string         `json:"workspace"`
+	MaxConcurrent int            `json:"maxConcurrent"`
+	Subagents     SubagentLimits `json:"subagents"`
+}
+
+type SubagentLimits struct {
+	MaxConcurrent int `json:"maxConcurrent"`
+}
+
+type SkillsConfig struct {
+	AllowBundled []string                    `json:"allowBundled"`
+	Entries      map[string]SkillEntryConfig `json:"entries"`
+}
+
+type SkillEntryConfig struct {
+	Enabled bool              `json:"enabled"`
+	Env     map[string]string `json:"env"`
+}
+
+type LoggingConfig struct {
+	RedactSensitive string `json:"redactSensitive"` // "off" disables redaction
+}
+
+type DiscoveryConfig struct {
+	Mdns MdnsConfig `json:"mdns"`
+}
+
+type MdnsConfig struct {
+	Mode string `json:"mode"` // "off" | "minimal" | "full"
+}
+
+type ToolsConfig struct {
+	Elevated ElevatedConfig `json:"elevated"`
+}
+
+type ElevatedConfig struct {
+	Enabled   bool                   `json:"enabled"`
+	AllowFrom map[string]interface{} `json:"allowFrom"`
+}
+
+type MetaConfig struct {
+	LastTouchedVersion string `json:"lastTouchedVersion"`
+	LastTouchedAt      string `json:"lastTouchedAt"`
 }
