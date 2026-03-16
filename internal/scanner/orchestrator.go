@@ -93,13 +93,16 @@ func Scan(path string) (*types.ScanResult, error) {
 	arkClaw := detectors.NewArkClawDetector()
 	allFindings = append(allFindings, arkClaw.Detect(cfg)...)
 
+	scEnv := detectors.NewSupplyChainEnvDetector()
+	allFindings = append(allFindings, scEnv.Detect(cfg)...)
+
 	score, grade, critical, high, medium, low := scoring.Calculate(allFindings)
 
 	return &types.ScanResult{
 		Findings:    allFindings,
 		Score:       score,
 		Grade:       grade,
-		TotalChecks: 55,
+		TotalChecks: 56,
 		Warnings:    warnings,
 		ScannedPath: path,
 		ScannedAt:   start,
