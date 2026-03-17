@@ -4,10 +4,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/tttturtle-russ/clawsan/internal/scanner"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/scanner"
 )
 
-// Version is injected at build time via ldflags: -X github.com/tttturtle-russ/clawsan/cmd.Version=v0.0.1
+// Version is injected at build time via ldflags: -X github.com/tttturtle-russ/ClawSanitizer/cmd.Version=v0.0.1
 var Version = "0.0.1"
 
 var rootCmd = &cobra.Command{

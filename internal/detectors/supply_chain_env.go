@@ -3,7 +3,7 @@ package detectors
 import (
 	"fmt"
 
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 var sensitiveEnvKeys = map[string]bool{

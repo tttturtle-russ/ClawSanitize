@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tttturtle-russ/clawsan/internal/parser"
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/parser"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 func TestCredentialStorage_Cred001_InsecureDirPerms(t *testing.T) {

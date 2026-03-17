@@ -1,5 +1,5 @@
 PROJECT     := clawsan
-MODULE      := github.com/tttturtle-russ/clawsan
+MODULE      := github.com/tttturtle-russ/ClawSanitizer
 BUILD_FLAGS := -ldflags="-X $(MODULE)/cmd.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo dev)"
 
 .PHONY: all build install test lint clean

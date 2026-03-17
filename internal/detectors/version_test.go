@@ -3,7 +3,7 @@ package detectors
 import (
 	"testing"
 
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 func TestVersion_VulnerableVersion_AllSixFindings(t *testing.T) {

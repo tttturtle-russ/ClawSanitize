@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 type semver struct {

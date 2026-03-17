@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 func TestParseConfig_Vulnerable(t *testing.T) {

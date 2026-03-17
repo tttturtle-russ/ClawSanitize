@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 type sarifReport struct {
@@ -102,7 +102,7 @@ func PrintSARIF(result *types.ScanResult, w io.Writer) error {
 				Driver: sarifDriver{
 					Name:           "clawsan",
 					Version:        version,
-					InformationURI: "https://github.com/tttturtle-russ/clawsan",
+					InformationURI: "https://github.com/tttturtle-russ/ClawSanitizer",
 					Rules:          rules,
 				},
 			},

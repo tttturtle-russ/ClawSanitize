@@ -3,7 +3,7 @@ package detectors
 import (
 	"testing"
 
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 func makeArkClawConfig(apiKey string) *types.OpenClawConfig {

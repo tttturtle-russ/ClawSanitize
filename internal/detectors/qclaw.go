@@ -1,7 +1,7 @@
 package detectors
 
 import (
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 const qclawChannelKey = "wechat-openclaw-channel"

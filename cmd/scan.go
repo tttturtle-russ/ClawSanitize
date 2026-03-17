@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tttturtle-russ/clawsan/internal/output"
-	"github.com/tttturtle-russ/clawsan/internal/scanner"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/output"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/scanner"
 )
 
 var (

@@ -3,10 +3,10 @@ package scanner
 import (
 	"time"
 
-	"github.com/tttturtle-russ/clawsan/internal/detectors"
-	"github.com/tttturtle-russ/clawsan/internal/parser"
-	"github.com/tttturtle-russ/clawsan/internal/scoring"
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/detectors"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/parser"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/scoring"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 var Version = "dev"

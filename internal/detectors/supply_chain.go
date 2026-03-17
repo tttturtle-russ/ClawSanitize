@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tttturtle-russ/clawsan/internal/api"
-	"github.com/tttturtle-russ/clawsan/internal/ioc"
-	"github.com/tttturtle-russ/clawsan/internal/parser"
-	"github.com/tttturtle-russ/clawsan/internal/types"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/api"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/ioc"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/parser"
+	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
 )
 
 type SupplyChainDetector struct {
