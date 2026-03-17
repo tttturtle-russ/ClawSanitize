@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func ParseConfig(path string) (*types.OpenClawConfig, error) {

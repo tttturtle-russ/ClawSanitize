@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 var (

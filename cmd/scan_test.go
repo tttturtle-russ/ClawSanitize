@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tttturtle-russ/ClawSanitizer/internal/scanner"
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/scanner"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func TestScan_VulnerableConfig(t *testing.T) {

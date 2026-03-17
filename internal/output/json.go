@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func WriteJSON(result *types.ScanResult, w io.Writer) error {

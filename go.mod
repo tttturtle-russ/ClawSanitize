@@ -1,4 +1,4 @@
-module github.com/tttturtle-russ/ClawSanitizer
+module github.com/tttturtle-russ/clawsan
 
 go 1.25.0
 

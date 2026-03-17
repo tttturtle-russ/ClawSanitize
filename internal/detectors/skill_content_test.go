@@ -3,8 +3,8 @@ package detectors
 import (
 	"testing"
 
-	"github.com/tttturtle-russ/ClawSanitizer/internal/parser"
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/parser"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func skillWith(slug, skillMD string, codeFiles ...parser.SkillFile) parser.InstalledSkill {

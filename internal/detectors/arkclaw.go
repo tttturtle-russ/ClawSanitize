@@ -1,7 +1,7 @@
 package detectors
 
 import (
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 const arkClawProviderKey = "volcengine"

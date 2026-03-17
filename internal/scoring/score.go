@@ -1,6 +1,6 @@
 package scoring
 
-import "github.com/tttturtle-russ/ClawSanitizer/internal/types"
+import "github.com/tttturtle-russ/clawsan/internal/types"
 
 // Severity deduction weights
 const (

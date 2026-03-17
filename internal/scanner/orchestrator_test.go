@@ -3,7 +3,7 @@ package scanner
 import (
 	"testing"
 
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func TestScan_VulnerableConfig(t *testing.T) {

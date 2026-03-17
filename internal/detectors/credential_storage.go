@@ -5,8 +5,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/tttturtle-russ/ClawSanitizer/internal/parser"
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/parser"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 var apiKeyPatterns = []*regexp.Regexp{

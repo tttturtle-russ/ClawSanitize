@@ -3,7 +3,7 @@ package detectors
 import (
 	"testing"
 
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func TestSupplyChainEnv_SC017_HostOverride(t *testing.T) {

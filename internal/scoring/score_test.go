@@ -3,7 +3,7 @@ package scoring
 import (
 	"testing"
 
-	"github.com/tttturtle-russ/ClawSanitizer/internal/types"
+	"github.com/tttturtle-russ/clawsan/internal/types"
 )
 
 func TestCalculateScore(t *testing.T) {
